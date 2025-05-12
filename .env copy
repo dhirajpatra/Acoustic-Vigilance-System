@@ -1,0 +1,51 @@
+# ========================
+# Service Configuration
+# ========================
+# Where audio files are saved temporarily
+STORAGE_PATH=./storage/rag_audio
+
+# ========================
+# LLM Configuration
+# ========================
+MODEL=tinyllama:1.1b
+MODEL_NAME=tinyllama:1.1b
+OLLAMA_API_URL=http://ollama_server:11434
+BASE_URL=http://ollama_server:11434
+AUDIO_MODEL=facebook/wav2vec2-base
+
+# ========================
+# Ollama Configuration
+# ========================
+OLLAMA_MODEL=tinyllama:1.1b
+OLLAMA_HOST=http://ollama_server:11434
+OLLAMA_PATH=http://ollama_server:11434
+LLM_MODEL=tinyllama:1.1b  # or llama3, mistral, etc.
+DECISION_PROMPT="Analyze this machine sound similarity score {score} (0-1 scale). Return JSON with keys 'diagnosis' and 'confidence'."
+EMBEDDING_MODEL=mxbai-embed-large
+CHROMA_DB_PATH="./chroma_db"
+
+# ========================
+# Embedding Configuration
+# ========================
+HUGGINGFACE_TEXT_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+IS_EMBEDDING=true
+ENTITY_EMBEDDING=False
+KNN_MIN_SCORE=0.94
+UPDATE_GRAPH_CHUNKS_PROCESSED=20
+NUMBER_OF_CHUNKS_TO_COMBINE=6
+DUPLICATE_TEXT_DISTANCE=5
+DUPLICATE_SCORE_VALUE=0.97
+MAX_TOKEN_CHUNK_SIZE=10000
+RAGAS_EMBEDDING_MODEL=ollama
+EMBEDDING_MODEL_SERVER=ollama
+HUGGINGFACE_TOKEN=<your token>
+SIMILARITY_THRESHOLD=0.7
+AUDIO_MODEL=facebook/wav2vec2-base
+VECTOR_INDEX_PATH="./vector_db/vector_db.index"
+
+# ========================
+# Audio Processing
+# ========================
+SAMPLE_RATE=16000
+CHUNK_SIZE_SECONDS=30
+SIMILARITY_THRESHOLD=0.7

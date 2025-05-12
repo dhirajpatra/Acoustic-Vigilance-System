@@ -1,0 +1,115 @@
+version: "3.8"
+
+services:
+  chat_service:
+    build: ./chat_service
+    ports:
+      - "8501:8501"
+    depends_on:
+      - rag_service
+      - comparison_service
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 2G
+
+  ollama_server:
+    image: ollama_server:latest # Assuming this is a custom build/entrypoint
+    build:
+      context: ./ollama_server
+    container_name: ollama_server
+    ports:
+      - "11435:11434" # Mapped port for host access
+    environment:
+      - OLLAMA_NO_ALIGNMENT_WARNING=1
+      - OLLAMA_DATA_LARGE=${OLLAMA_DATA_LARGE} # Example
+      - OLLAMA_MODELS_LARGE=${OLLAMA_MODELS_LARGE} # Example
+    volumes:
+      # Map host directories for Ollama data and models
+      # Adjust host paths as necessary to match your setup
+      - ./ollama_server/entrypoint.sh:/app/ollama_server/entrypoint.sh # Map the entrypoint script
+      - ./ollama_data_large:/root/.ollama # Persist Ollama data (embeddings cache, etc.)
+      - ./ollama_models_large:/root/.ollama/models # Persist downloaded models
+      # - .:/app # Consider removing or mapping a more specific config dir if possible
+    entrypoint: ["/bin/bash", "/app/ollama_server/entrypoint.sh"]
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 8G
+
+  rag_service:
+    build: ./rag_service
+    ports:
+      - "8000:8000"
+    environment:
+      # Pass environment variables needed by rag_service from your .env file
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+      - OLLAMA_HOST=${OLLAMA_HOST}
+      - SAMPLE_RATE=${SAMPLE_RATE}
+      - CHUNK_SIZE_SECONDS=${CHUNK_SIZE_SECONDS}
+      # Pass ChromaDB and Cache paths - **IMPORTANT**
+      - CHROMA_DB_PATH=/app/chroma_db # Use container path
+      - EMBEDDING_CACHE_PATH=/app/embedding_cache # Use container path
+      # Other potentially needed env vars (refer to rag_service code)
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN} # Needed if AUDIO_MODEL is HF
+      - AUDIO_MODEL=${AUDIO_MODEL:-facebook/wav2vec2-base} # Still used if health check needs it
+      - MAX_DURATION_MINUTES=${MAX_DURATION_MINUTES:-3}
+
+    volumes:
+      # Map host directories to container paths
+      - ./storage/rag_audio:/app/storage/rag_audio # For storing original audio files
+      - ./models:/app/models # Only needed if models are loaded from a host directory
+      - ./chroma_db:/app/chroma_db # <-- ADD: Map host Chroma dir to container path
+      - ./embedding_cache:/app/embedding_cache # <-- ADD: Map host cache dir to container path
+    depends_on:
+      - ollama_server
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 4G
+
+  comparison_service:
+    build: ./comparison_service
+    ports:
+      - "8001:8001"
+    environment:
+      # Pass environment variables needed by comparison_service from your .env file
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL} # Used for embedding query text
+      - OLLAMA_MODEL=${OLLAMA_MODEL} # Used for LLM analysis
+      - OLLAMA_HOST=${OLLAMA_HOST}
+      - SIMILARITY_THRESHOLD=${SIMILARITY_THRESHOLD}
+      - SAMPLE_RATE=${SAMPLE_RATE} # Used for audio processing constants
+      - CHUNK_SIZE_SECONDS=${CHUNK_SIZE_SECONDS} # Used for analysis window
+      # Pass ChromaDB and Cache paths - **IMPORTANT** (MUST MATCH rag_service)
+      - CHROMA_DB_PATH=/app/chroma_db # Use container path
+      - EMBEDDING_CACHE_PATH=/app/embedding_cache # Use container path
+      # Other potentially needed env vars
+      - AUDIO_MODEL=${AUDIO_MODEL:-facebook/wav2vec2-base} # Used in health check potentially
+
+    volumes:
+      # Map host directories to container paths
+      - ./storage/test_audio:/app/storage/test_audio # For temporary test audio uploads
+      - ./models:/app/models # Only needed if models are loaded from a host directory
+      - ./chroma_db:/app/chroma_db # <-- ADD: Map host Chroma dir to container path (MUST MATCH rag_service)
+      - ./embedding_cache:/app/embedding_cache # <-- ADD: Map host cache dir to container path (MUST MATCH rag_service)
+    depends_on:
+      - rag_service # Keep dependency as rag usually needs to be up to populate db
+      - ollama_server
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 4G
+
+# Named volumes for persistence (optional, but cleaner than bind mounts for some)
+volumes:
+  ollama_data_large:
+  ollama_models_large:
+  chroma_db_data:
+  embedding_cache:

@@ -1,0 +1,34 @@
+# === Core Dependencies ===
+fastapi==0.109.1
+uvicorn==0.27.0
+python-multipart==0.0.6
+python-dotenv==1.0.0
+
+# === Audio Processing ===
+librosa==0.10.1
+numpy==1.26.3
+pydub==0.25.1  # Audio format conversion
+soundfile==0.12.1  # MP3/WAV support
+
+# === Embeddings & Similarity ===
+torch==2.2.1
+transformers==4.38.2
+faiss-cpu==1.7.4  # Switch to faiss-gpu if CUDA available
+# faiss-gpu==1.7.4  # Uncomment if NVIDIA GPU present
+
+# === LLM Integration (Mandatory) ===
+ollama  # Ollama Python client
+httpx  # Async calls to Ollama API
+sentence-transformers==2.6.1  # Text-audio fusion
+
+# === Optional/Dev ===
+# requests==2.31.0  # Only needed for internal API calls
+# onnxruntime==1.17.1  # For future mobile quantization
+
+# Core LangChain (assuming these are used elsewhere in your project)
+langchain
+langchain-core
+langchain-community
+langchain-ollama
+langchain-text-splitters
+langchain_chroma

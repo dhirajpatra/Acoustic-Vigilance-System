@@ -150,7 +150,7 @@ OLLAMA_MODEL=tinyllama
 
 
 
-## **Usage Examples**
+## **Usage Examples [currently support .wav you can add ffmpeg of similar lib to make for mp3 or so]**
 
 
 
